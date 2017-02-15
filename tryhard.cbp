@@ -31,6 +31,13 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="rbtree.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="storage.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
