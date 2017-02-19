@@ -1,22 +1,22 @@
-CCFLAGS += -c -g -Wall -Wextra -O3
-
+CC = gcc
+CCFLAGS = -Wextra -ansi -pedantic -Wall -g -O3 -std=gnu11
 
 all : storage
 
+run : storage
+	@./storage
+
 clean :
-	rm -f *.o storage
+	rm -f *.o
 
-storage : main.o api.o
-	$(CC) $(CCFLAGS) main.o storage.o -o storage
+storage : main.o rbtree.o hash.o
+	$(CC) $(CCFLAGS) -o storage main.o rbtree.o hash.o
 
-main.o : main.c
-	$(CC) $(CCFLAGS) main.c
+main.o : main.c storage.h
+	$(CC) $(CCFLAGS) -c main.c 
 
-storage.o : hash.o rbtree.o
-	$(CC) $(CCFLAGS) storage.o hash.o rbtree.o
+hash.o : hash.c storage.h
+	$(CC) $(CCFLAGS) -c hash.c
 
-hash.o : hash.c
-	$(CC) $(CCFLAGS) hash.c
-
-rbtree.o : rbtree.c
-	$(CC) $(CCFLAGS) hash.c
+rbtree.o : rbtree.c storage.h
+	$(CC) $(CCFLAGS) -c rbtree.c
