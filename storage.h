@@ -11,11 +11,12 @@ typedef struct storage_t{
 	void* (*find) (const void* self, const void* key);
 	int (*clear)(void* self);
 	int (*delete)(void* self);
+	size_t (*size)();
 } storage_t;
 
 
 storage_t* RBTree_ctor(size_t element_size);
-storage_t* init_hash(size_t element_size, size_t table_hash_size, void* hash_function);
+storage_t* init_hash(size_t element_size, size_t table_hash_size, size_t key_size, void* hash_function);
 
 size_t HashAllData(void* Data);
 

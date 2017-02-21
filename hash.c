@@ -14,8 +14,9 @@ typedef struct storage_t{
 	void* (*find)(const void* self, const void* key);
 	int (*clear)(void* self);
 	int (*delete)(void* self);
+	size_t (*size)(void* self);
 	void* manager;
-	size_t size;
+	size_t _size;
 } storage_t;
 
 struct list typedef list;
@@ -30,28 +31,39 @@ struct hash{
 	size_t blsize;
 	size_t tbsize;
 	size_t (*HashFunc)();
+	size_t key_size;
 	list* table;
 } typedef hash;
 
-size_t HashAllData(const char* element, size_t* key_size, size_t size){
+size_t size(void* self){
+	return ((storage_t*)self)->_size;
+}
+
+size_t HashAllData(const char* element){
+	if(element == NULL)
+		return -1;
 	size_t hash_value, i;
 	for(hash_value = 0; *element; ++element){
 		hash_value = ( hash_value << ONE_EIGHTH ) + *element;
 		if (( i = hash_value & HIGH_BITS ) != 0 )
 			hash_value = (hash_value ^ (i >> THREE_QUARTERS)) & ~HIGH_BITS;
-		hash_value %= size;
-		*key_size++;
 	}
 	return hash_value;
 }
 
 int add_hash  (void* self, const void* key, const void* element){
-	size_t key_size = 1;
-	size_t tg = (((hash*)(((storage_t*)self)->manager))->HashFunc)(key, &key_size, ((storage_t*)self)->size);
-	key_size++;
+	if(self == NULL || key == NULL || element == NULL)
+		return 1;
 	hash* var = ((storage_t*)self)->manager;
-	list* lst = &(var->table[tg]);
+	size_t tg = (((hash*)(((storage_t*)self)->manager))->HashFunc)(key) % var->tbsize;
+	size_t key_size = var->key_size;
 
+	if(!key_size){
+		while(((char*)key)[key_size++]);
+		key_size--;
+	}
+
+	list* lst = &(var->table[tg]);
 	while(lst->next != NULL){
 		if(!strncmp((const char*)key, (const char*)lst->key, key_size)){
 			return 1;		
@@ -67,14 +79,19 @@ int add_hash  (void* self, const void* key, const void* element){
 	lst->next->next = NULL;
 	lst->next->element = NULL;
 	lst->next->key = NULL;
+	((storage_t*)self)->_size++;
 	return 0;
 }
 
 void drop_hash(void* self, const void* key){
-	size_t key_size = 1;
-	size_t tg = (((hash*)(((storage_t*)self)->manager))->HashFunc)(key, &key_size, ((storage_t*)self)->size);
-	key_size++;
 	hash* var = ((storage_t*)self)->manager;
+	size_t tg = (((hash*)(((storage_t*)self)->manager))->HashFunc)(key) % var->tbsize;
+	size_t key_size = var->key_size;
+
+	if(!key_size){
+		while(((char*)key)[key_size++]);
+		key_size--;
+	}
 
 	list* lst = &(var->table[tg]);
 
@@ -90,11 +107,13 @@ void drop_hash(void* self, const void* key){
 					free(lst->element);
 				if(lst)
 					free(lst);
+				((storage_t*)self)->_size--;
 			}else{
 				if(lst->key)
 					free(lst->key);
 				if(lst->element)
 					free(lst->element);
+				((storage_t*)self)->_size--;
 			}
 			return;		
 		}
@@ -106,10 +125,15 @@ void drop_hash(void* self, const void* key){
 
 
 void* find_hash(const void* self, const void* key){
-	size_t key_size = 1;
-	size_t tg = (((hash*)(((storage_t*)self)->manager))->HashFunc)(key, &key_size, ((storage_t*)self)->size);
-	key_size++;
 	hash* var = ((storage_t*)self)->manager;
+	size_t tg = (((hash*)(((storage_t*)self)->manager))->HashFunc)(key) % var->tbsize;
+	size_t key_size = var->key_size;
+
+	if(!key_size){
+		while(((char*)key)[key_size++]);
+		key_size--;
+	}
+
 
 	list* lst = &(var->table[tg]);
 	while(lst->next != NULL){
@@ -124,7 +148,7 @@ void* find_hash(const void* self, const void* key){
 int clear_hash(void* self){
 	hash* var = (hash*)((storage_t*)self)->manager;
 	size_t i = 0;
-	size_t size = ((storage_t*)self)->size;
+	size_t size = var->tbsize;
 	list* tmp = NULL;
 	list* temp = NULL;
 	for(i = 0; i < size; i++){
@@ -151,7 +175,7 @@ int clear_hash(void* self){
 			free(temp);
 		}		
 	}
-	
+	((storage_t*)self)->_size = 0;
 	return 0;
 }
 
@@ -172,25 +196,29 @@ int delete_hash(void* self){
 }
 
 
-storage_t* init_hash(size_t blsize, size_t hash_table_size, void* hashFunc){
+storage_t* init_hash(size_t blsize, size_t hash_table_size, size_t key_size, void* hashFunc){
 	storage_t* tmp = (storage_t*)malloc(sizeof(storage_t));
 	tmp->add = add_hash;
 	tmp->drop = drop_hash;
 	tmp->find = find_hash;
 	tmp->clear = clear_hash;
 	tmp->delete = delete_hash;
+	tmp->size = size;
 	tmp->manager = (void*)malloc(sizeof(hash));
-	tmp->size = hash_table_size;
+	((hash*)(tmp->manager))->tbsize = hash_table_size;
 	((hash*)(tmp->manager))->blsize = blsize;
+	((hash*)(tmp->manager))->key_size = key_size;
 	((hash*)(tmp->manager))->table = (list*)malloc(hash_table_size * sizeof(list));
-	((hash*)(tmp->manager))->HashFunc = hashFunc;
+	if(hashFunc != NULL){
+		((hash*)(tmp->manager))->HashFunc = hashFunc;
+	}else{
+		((hash*)(tmp->manager))->HashFunc = HashAllData;
+	}
 	size_t i;	
 	for(i = 0; i < hash_table_size; i++){
 		(((hash*)(tmp->manager))->table[i]).next = NULL;
 		(((hash*)(tmp->manager))->table[i]).element = NULL;
 		(((hash*)(tmp->manager))->table[i]).key = NULL;
 	}
-		
 	return tmp;
 }
-
