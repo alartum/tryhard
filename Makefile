@@ -13,14 +13,18 @@ run : tryhard
 clean :
 	rm -f *.o
 
+libstore : hash.o
+	ar r 
+
 tryhard : main.o rbtree.o hash.o
 	$(CC) $(CCFLAGS) -o tryhard main.o rbtree.o hash.o
 
 main.o : main.c storage.h
 	$(CC) $(CCFLAGS) -c main.c 
 
-hash.o : hash.c storage.h
+hash.o : hash.c
 	$(CC) $(CCFLAGS) -c hash.c
 
-rbtree.o : rbtree.c storage.h
+rbtree.o : rbtree.c
 	$(CC) $(CCFLAGS) -c rbtree.c
+
