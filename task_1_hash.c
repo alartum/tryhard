@@ -12,8 +12,10 @@ int print_help(char* name){
 }
 
 int main(int argc, char** argv){
-
-	int opt;
+	int opt = 0;
+	size_t x = 0;
+	char str[1024];
+	size_t count = 0;
 
 	while ((opt = getopt(argc, argv, "h")) != -1) {
 		switch(opt){
@@ -36,36 +38,50 @@ int main(int argc, char** argv){
 	storage_t* in = init_hash(sizeof(size_t), 1024, 0, NULL);
 	storage_t* out = init_hash(sizeof(size_t), 1024, 0, NULL);
 
-	FILE* f = fopen(argv[1], "r");
+	FILE* fin = fopen(argv[1], "r");
+	if(fin == NULL){
+		perror(argv[1]);
+		goto out;
+	}
 
-	if(f == NULL)
-		perror("INPUT"); 
 
-	char str[24];
-
-	size_t x = 0;
-
-	while(fscanf(f, "%s", str) != -1){
+	while(fscanf(fin, "%s", str) != -1){
 		in->add(in, str, &x);
 	}
 
-	fclose(f);
 
-	f = fopen(argv[2], "r");
 
-	size_t count = 0;	
+	FILE* fout = fopen(argv[2], "r");
+	if(fout == NULL){
+		perror(argv[2]);
+		goto out;
+	}
 
-	while(fscanf(f, "%s", str) != -1){
+	
+
+	while(fscanf(fout, "%s", str) != -1){
 		if(in->find(in, str) && !out->find(out, str)){
 			count++;		
 		}
 		out->add(out, str, &x);
 	}
-	fclose(f);
-	printf("%zu\n", in->size(in));
-	printf("%zu\n", out->size(out));
+
 	printf("%zu\n", count);
-	in->delete(in);
+
+out:
+	if(fin != NULL)
+		fclose(fin);
+	if(fout != NULL)
+		fclose(fout);
+
+	if(in != NULL){
+		in->delete(in);
+		in = NULL;
+	}
+	if(out != NULL){
+		out->delete(out);
+		out = NULL;
+	}
 
 	return 0;
 }

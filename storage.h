@@ -7,12 +7,20 @@ An interface for different approaches of data storage (hash table, black-red tre
 */
 #pragma pack(push, 8)
 typedef struct storage_t{
-	int (*add)  (void* self, const void* key, const void* element);
-	void (*drop) (void* self, const void* key);
-	void* (*find) (const void* self, const void* key);
+//Main metod's
+	int (*add)(void* self, const void* key, const void* element);
+	void (*drop)(void* self, const void* key);
+	void* (*find)(const void* self, const void* key);
 	int (*clear)(void* self);
 	int (*delete)(void* self);
-	size_t (*size)();
+	size_t (*size)(void* self);
+//Metod's for iterator
+	void (*next)(void* arg);
+	void (*prev)(void* arg);
+	void* (*end)(void* self);
+	void* (*begin)(void* self);
+	void* (*at)(void* arg);
+
 } storage_t;
 #pragma(pop)
 
