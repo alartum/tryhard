@@ -1,20 +1,23 @@
 CC = gcc
 CCFLAGS = -Wextra -ansi -pedantic -Wall -g -O3 -std=gnu11
 
-all : tryhard
+all : test
 
 Debug : tryhard
 
 Release: tryhard
 
 run : tryhard
-	@./tryhard
+	@./test
 
 clean :
 	rm -f *.o
 
-libstore : hash.o
-	ar r 
+lib_storage : hash.o
+	ar r lib_storage.a hash.o 
+
+test : lib_storage task_1_hash.c
+	gcc -o test task_1_hash.c lib_storage.a
 
 tryhard : main.o rbtree.o hash.o
 	$(CC) $(CCFLAGS) -o tryhard main.o rbtree.o hash.o
