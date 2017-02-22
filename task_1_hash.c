@@ -4,6 +4,7 @@
 #include "storage.h"
 #include <unistd.h>
 
+
 int print_help(char* name){
 	char* help = "\n\nThis program for count the same word in 2 files.\n\nFor example ~ $ %s first.file second.file\n\n";
 	printf(help, name);
@@ -29,6 +30,7 @@ int main(int argc, char** argv){
 
 	if((argc - optind) != 2){
 		fprintf(stderr, "To many argument's: use -h for help\n");
+		return 0;
 	}
 
 	storage_t* in = init_hash(sizeof(size_t), 1024, 0, NULL);

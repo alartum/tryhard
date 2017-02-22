@@ -3,11 +3,9 @@
 #include <stdio.h>
 #include <limits.h>
 
-#define BITS_IN_int (sizeof(int) * CHAR_BIT)
-#define THREE_QUARTERS  ((int) ((BITS_IN_int * 3) / 4))
-#define ONE_EIGHTH ((int) (BITS_IN_int / 8))
-#define HIGH_BITS  (~((size_t)(~0) >> ONE_EIGHTH))
 
+
+#pragma pack(push, 8)
 typedef struct storage_t{
 	int (*add)(void* self, const void* key, const void* element);
 	void (*drop)(void* self, const void* key);
@@ -18,11 +16,10 @@ typedef struct storage_t{
 	void* manager;
 	size_t _size;
 } storage_t;
+#pragma(pop)
 
-struct list typedef list;
-
-struct list{
-	list* next;
+struct _list{
+	struct _list* next;
 	void* element;
 	void* key;
 } typedef list;
@@ -38,6 +35,11 @@ struct hash{
 size_t size(void* self){
 	return ((storage_t*)self)->_size;
 }
+//from habra
+#define BITS_IN_int (sizeof(int) * CHAR_BIT)
+#define THREE_QUARTERS  ((int) ((BITS_IN_int * 3) / 4))
+#define ONE_EIGHTH ((int) (BITS_IN_int / 8))
+#define HIGH_BITS  (~((size_t)(~0) >> ONE_EIGHTH))
 
 size_t HashAllData(const char* element){
 	if(element == NULL)
