@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <limits.h>
 
-
-
 #pragma pack(push, 8)
 typedef struct storage_t{
 	int (*add)(void* self, const void* key, const void* element);
@@ -14,11 +12,13 @@ typedef struct storage_t{
 	int (*delete)(void* self);
 	size_t (*size)(void* self);
 
-	void (*next)(void* arg);
-	void (*prev)(void* arg);
+	void (*next)(void* iterator);
+	void (*prev)(void* iterator);
 	void* (*end)(void* self);
 	void* (*begin)(void* self);
-	void* (*at)(void* arg);
+	void* (*getKey)(void* iterator);
+	void* (*getElem)(void* iterator);
+	int (*iterEquel)(void* iterator1, void* iterator2);
 
 	void* manager;
 	size_t _size;
@@ -36,6 +36,7 @@ struct hash{
 	size_t blsize;
 	size_t tbsize;
 	size_t (*HashFunc)();
+	int (*cmpKey)();
 	size_t key_size;
 	void** table;
 } typedef hash;
@@ -95,7 +96,7 @@ int add_hash  (void* self, const void* key, const void* element){
 	}
 
 	list* prev = (list*)(var->table[tg]);
-	if(!strncmp((const char*)key, (const char*)(prev->key), key_size)){
+	if(!(((hash*)(((storage_t*)self)->manager))->HashFunc)(key, prev->key)){
 		return 1;
 	}
 
@@ -103,7 +104,7 @@ int add_hash  (void* self, const void* key, const void* element){
 	list* tmp = prev->next;
 
 	while(tmp != NULL){
-		if(!strncmp((const char*)key, (const char*)(tmp->key), key_size)){
+		if(!(((hash*)(((storage_t*)self)->manager))->cmpKey)(key, tmp->key)){
 			return 1;
 		}
 		prev = tmp;
@@ -139,7 +140,7 @@ void drop_hash(void* self, const void* key){
 	list* prev = NULL;
 
 	while(lst != NULL){
-		if(!strncmp((const char*)key, (const char*)lst->key, key_size)){
+		if(!(((hash*)(((storage_t*)self)->manager))->cmpKey)(key, lst->key)){
 			if(prev != NULL){
 				prev->next = lst->next;
 			}else{
@@ -160,6 +161,7 @@ void drop_hash(void* self, const void* key){
 				free(lst);
 				lst = NULL;
 			}
+			((storage_t*)self)->_size--;
 			return;		
 		}
 		prev = lst;
@@ -182,7 +184,7 @@ void* find_hash(const void* self, const void* key){
 
 	list* lst = (list*)var->table[tg];
 	while(lst != NULL){
-		if(!strncmp((char*)key, (char*)(lst->key), key_size)){
+		if(!(((hash*)(((storage_t*)self)->manager))->cmpKey)(key, lst->key)){
 			return lst->element;		
 		}
 		lst = lst->next;
@@ -232,12 +234,6 @@ int clear_hash(void* self){
 
 int delete_hash(void* self){
 	clear_hash(self);
-	((storage_t*)self)->add = NULL;
-	((storage_t*)self)->drop = NULL;
-	((storage_t*)self)->find = NULL;
-	((storage_t*)self)->clear = NULL;
-	((storage_t*)self)->delete = NULL;
-	((storage_t*)self)->size = NULL;
 	if(((hash*)(((storage_t*)self)->manager))->table)
 		free(((hash*)(((storage_t*)self)->manager))->table);
 	if(((storage_t*)self)->manager)
@@ -333,12 +329,25 @@ void* end_hash(void* self){
 	return NULL;
 }
 
-void* at_hash(void* arg){
+void* at_hash_elem(void* arg){
 	iterator* temp = (iterator*)arg;
 	return temp->lst->element;
 }
 
-storage_t* init_hash(size_t blsize, size_t hash_table_size, size_t key_size, void* hashFunc){
+void* at_hash_key(void* arg){
+	iterator* temp = (iterator*)arg;
+	return temp->lst->key;
+}
+
+int equel_iterator_hash(void* arg1, void* arg2){
+	iterator* tmp1 = (iterator*)arg1;
+	iterator* tmp2 = (iterator*)arg2;
+	if(tmp1->num == tmp2->num && tmp1->lst == tmp2->lst && tmp1->self == tmp2->self)
+		return 1;
+	return 0;
+}
+
+storage_t* init_hash(size_t blsize, size_t hash_table_size, size_t key_size, void* hashFunc, void* cmpKey){
 	storage_t* tmp = (storage_t*)malloc(sizeof(storage_t));
 	tmp->add = add_hash;
 	tmp->drop = drop_hash;
@@ -352,7 +361,9 @@ storage_t* init_hash(size_t blsize, size_t hash_table_size, size_t key_size, voi
 	tmp->prev = prev_hash;
 	tmp->end = end_hash;
 	tmp->begin = begin_hash;
-	tmp->at = at_hash;
+	tmp->getKey = at_hash_key;
+	tmp->getElem = at_hash_elem;
+	tmp->iterEquel = equel_iterator_hash;
 
 	tmp->manager = (void*)malloc(sizeof(hash));
 	((hash*)(tmp->manager))->tbsize = hash_table_size;
@@ -363,6 +374,11 @@ storage_t* init_hash(size_t blsize, size_t hash_table_size, size_t key_size, voi
 		((hash*)(tmp->manager))->HashFunc = hashFunc;
 	}else{
 		((hash*)(tmp->manager))->HashFunc = HashAllData;
+	}
+	if(cmpKey != NULL){
+		((hash*)(tmp->manager))->cmpKey = cmpKey;
+	}else{
+		((hash*)(tmp->manager))->cmpKey = strcmp;
 	}
 	size_t i;	
 	for(i = 0; i < hash_table_size; i++){
