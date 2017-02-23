@@ -1,24 +1,22 @@
-CC = gcc
-CCFLAGS = -Wextra -ansi -pedantic -Wall -g -O3 -std=gnu11
-TARGET = sample1 sample2
 LIBNAME = libstore.a
 USER_DIR = ../source
+LIB_DIR = ../libstore
+CCFLAGS = -Wextra -ansi -pedantic -Wall -g -O3 -std=gnu11 -I $(LIB_DIR)
+TARGET = sample1 sample2
+
 
 all : $(TARGET)
 
 clean :
-	rm -f *.o $(TARGET) $(LIBNAME)
+	rm -f *.o $(TARGET)
 
-$(LIBNAME): hash.o
-	$(AR) $(ARFLAGS) $@ $^
+$(LIB_DIR)/$(LIBNAME) : $(LIB_DIR)/Makefile
+	@make -C $(LIB_DIR)
 
-sample1 : $(USER_DIR)/sample1.c $(LIBNAME)
+sample1 : $(USER_DIR)/sample1.c $(LIB_DIR)/$(LIBNAME) $(LIB_DIR)/storage.h
 	$(CC) $(CCFLAGS) -o $@ $^
 
-hash.o : $(USER_DIR)/hash.c
-	$(CC) $(CCFLAGS) -c $^
-
-sample2 : $(USER_DIR)/sample2.c $(LIBNAME)
+sample2 : $(USER_DIR)/sample2.c $(LIB_DIR)/$(LIBNAME) $(LIB_DIR)/storage.h
 	$(CC) $(CCFLAGS) -o $@ $^
 
 
