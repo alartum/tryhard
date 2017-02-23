@@ -115,11 +115,11 @@ out:
 		close(fout);
 
 	if(in != NULL){
-		in->delete(in);
+		in->destroy(in);
 		in = NULL;
 	}
 	if(out != NULL){
-		out->delete(out);
+		out->destroy(out);
 		out = NULL;
 	}
 

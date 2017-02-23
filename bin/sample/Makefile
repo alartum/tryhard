@@ -1,6 +1,6 @@
 LIBNAME = libstore.a
-USER_DIR = ../source
-LIB_DIR = ../libstore
+USER_DIR = ../../source/sample
+LIB_DIR = ../../libstore
 CCFLAGS = -Wextra -ansi -pedantic -Wall -g -O3 -std=gnu11 -I $(LIB_DIR)
 TARGET = sample1 sample2
 

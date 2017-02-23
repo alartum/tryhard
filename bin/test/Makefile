@@ -2,7 +2,7 @@
 # created to the list.
 TESTS = sample_unittest
 
-LIB_DIR = ../libstore
+LIB_DIR = ../../libstore
 
 LIBNAME = libstore.a
 
@@ -22,12 +22,10 @@ LIBNAME = libstore.a
 
 # Points to the root of Google Test, relative to where this file is.
 # Remember to tweak this if you move this file.
-GTEST_DIR = ../../googletest/googletest
+GTEST_DIR = ../../../googletest/googletest
 
-# Where to find user code.
-USER_DIR = ../source
 # Where to find test source code
-TEST_SOURCE_DIR = ../tests
+TEST_SOURCE_DIR = ../../source/test
 
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that

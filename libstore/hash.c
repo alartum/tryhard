@@ -9,7 +9,7 @@ typedef struct storage_t{
 	void (*drop)(void* self, const void* key);
 	void* (*find)(const void* self, const void* key);
 	int (*clear)(void* self);
-	int (*delete)(void* self);
+	int (*destroy)(void* self);
 	size_t (*size)(void* self);
 
 	void (*next)(void* iterator);
@@ -232,7 +232,7 @@ int clear_hash(void* self){
 	return 0;
 }
 
-int delete_hash(void* self){
+int destroy_hash(void* self){
 	clear_hash(self);
 	if(((hash*)(((storage_t*)self)->manager))->table)
 		free(((hash*)(((storage_t*)self)->manager))->table);
@@ -353,7 +353,7 @@ storage_t* init_hash(size_t blsize, size_t hash_table_size, size_t key_size, voi
 	tmp->drop = drop_hash;
 	tmp->find = find_hash;
 	tmp->clear = clear_hash;
-	tmp->delete = delete_hash;
+	tmp->destroy = destroy_hash;
 	tmp->size = size_hash;
 	tmp->_size = 0;
 

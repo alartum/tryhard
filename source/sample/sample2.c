@@ -112,7 +112,7 @@ out:
 		close(fin);
 
 	if(in != NULL){
-		in->delete(in);
+		in->destroy(in);
 		in = NULL;
 	}
 
