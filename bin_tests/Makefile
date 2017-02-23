@@ -2,9 +2,9 @@
 # created to the list.
 TESTS = sample_unittest
 
-LIBNAME = libstore.a
+LIB_DIR = ../libstore
 
-CCFLAGS = -Wextra -ansi -pedantic -Wall -g -O3 -std=gnu11
+LIBNAME = libstore.a
 
 # A sample Makefile for building Google Test and using it in user
 # tests.  Please tweak it to suit your environment and project.  You
@@ -34,6 +34,7 @@ TEST_SOURCE_DIR = ../tests
 # the compiler doesn't generate warnings in Google Test headers.
 CPPFLAGS += -isystem $(GTEST_DIR)/include
 
+CPPFLAGS += -I $(LIB_DIR)
 # Flags passed to the C++ compiler.
 CXXFLAGS += -g -Wall -Wextra -pthread
 
@@ -77,16 +78,13 @@ gtest_main.a : gtest-all.o gtest_main.o
 # gtest_main.a, depending on whether it defines its own main()
 # function.
 
-hash.o : $(USER_DIR)/hash.c
-	$(CC) $(CCFLAGS) -c $^
-
-$(LIBNAME) : hash.o
-	$(AR) $(ARFLAGS) $@ $^
+$(LIB_DIR)/$(LIBNAME) : $(LIB_DIR)/Makefile
+	@make -C $(LIB_DIR)
 
 sample_unittest.o : $(TEST_SOURCE_DIR)/sample_unittest.cc \
-                     $(USER_DIR)/storage.h $(GTEST_HEADERS)
+                     $(GTEST_HEADERS) $(LIB_DIR)/storage.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_SOURCE_DIR)/sample_unittest.cc
 
-sample_unittest : sample_unittest.o $(LIBNAME) gtest_main.a
+sample_unittest : sample_unittest.o $(LIB_DIR)/$(LIBNAME) gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
