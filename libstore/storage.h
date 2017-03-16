@@ -27,7 +27,6 @@ typedef struct storage_t{
 	void* (*getKey)(void* iterator);
 	void* (*getElem)(void* iterator);
 	int (*iterEquel)(void* iterator1, void* iterator2);
-
 } storage_t;
 #pragma(pop)
 

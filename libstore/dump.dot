@@ -1,0 +1,4 @@
+digraph G {
+	bgcolor = "#FCFDFE"
+	18690224 [label = "0", shape = circle, fillcolor = "black", fontcolor = "red", style = filled]
+}
