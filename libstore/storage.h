@@ -31,7 +31,10 @@ typedef struct storage_t{
 #pragma(pop)
 
 
-storage_t* RBTree_ctor(size_t element_size);
+storage_t* init_bin_tree(int (*key_cmp)(const void*, const void*));
+
+int key_cmp_str(const void* key1, const void* key2);
+int key_cmp_int (const void* key1, const void* key2);
 
 /*
 Function for init storage_t working on hash table.
