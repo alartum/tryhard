@@ -1,6 +1,8 @@
 # tryhard
 A container with two realisations of API functions (tree &amp; hash table).
-##Directory info
+
+## Directory info
+
 Directory Name | Contains
 ------------ | -------------
 bin/sample | Sample programs Makefile
