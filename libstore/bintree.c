@@ -14,7 +14,6 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-#pragma pack(push, 8)
 typedef struct storage_t{
 //Main metod's
 	int (*add)(void* self, const void* key, const void* element);
@@ -33,7 +32,6 @@ typedef struct storage_t{
 	int (*iterEquel)(void* iterator1, void* iterator2);
 	void* _manager;
 } storage_t;
-#pragma(pop)
 
 typedef struct bin_tree_t bin_tree_t;
 
@@ -93,12 +91,12 @@ size_t bin_tree_size (void* self)
     return bin_tree->size;
 }
 
-int bin_cmp_str(const void* key1, const void* key2)
+int key_cmp_str(const void* key1, const void* key2)
 {
     return strcmp((char*)key1, (char*)key2);
 }
 
-int bin_cmp_int (const void* key1, const void* key2)
+int key_cmp_int(const void* key1, const void* key2)
 {
     if (*((int*)key1) < *((int*)key2))
         return -1;
@@ -231,7 +229,6 @@ int bin_tree_add(void* self, const void* key, const void* data){
         bin_tree->most_left = new_node;
     if (is_max < 0)
         bin_tree->most_right = new_node;
-
     return 1;
 }
 
@@ -245,7 +242,10 @@ void* bin_tree_find(const void* self, const void* key){
             curr = curr->right;
         else
             curr = curr->left;
-    return (void*)curr;
+    if (curr)
+        return (void*)(curr->data);
+    else
+        return NULL;
 }
 
 int bin_tree_destroy(void* self){
@@ -274,7 +274,6 @@ void bin_node_delete(bin_node_t* bin_node){
         if (bin_node->parent->right == bin_node)
             bin_node->parent->right = NULL;
     }
-    bin_node->tree->size--;
     free(bin_node);
 }
 
@@ -305,22 +304,20 @@ void bin_tree_drop_(bin_node_t* bin_node, const void* key)
         if (bin_node->right && bin_node->left){
             if (!(bin_node->right->left)){
                 bin_node->data  = bin_node->right->data;
-                bin_node->key  = bin_node->right->key;
+                bin_node->key   = bin_node->right->key;
                 if (bin_node->right->right)
                     bin_node->right->right->parent = bin_node;
+                bin_node_t* right = bin_node->right;
                 bin_node->right = bin_node->right->right;
-                free(bin_node->right);
+                free(right);
             }
             else{
-
                 bin_node_t* most_left = bin_node->right->left;
                 for (; most_left->left; most_left = most_left->left);
                 bin_node->data = most_left->data;
                 bin_node->key = most_left->key;
                 most_left->parent->left = most_left->right;
                 if (most_left->right) most_left->right->parent = most_left->parent;
-
-                bin_node->tree->size--;
                 free(most_left);
             }
         }
@@ -374,6 +371,7 @@ void bin_tree_drop(void* self, const void* key){
             bin_tree->root = NULL;
             bin_tree->most_right = NULL;
             bin_tree->most_left = NULL;
+            bin_tree->size--;
     }
     else
         bin_tree_drop_(bin_tree->root, key);
@@ -418,7 +416,7 @@ void bin_node_to_dot (const bin_node_t* bin_node, FILE* dot_file)
 
     fprintf (dot_file, "\t%lu ", (long unsigned)bin_node);
     //bin_node_dump(bin_node);
-    fprintf (dot_file, "[label = \"%d\", shape = circle, fillcolor = \"white\", fontcolor = \"black\", style = filled]\n", *(int*)bin_node->key);
+    fprintf (dot_file, "[label = \"%s : %lu\", shape = circle, fillcolor = \"white\", fontcolor = \"black\", style = filled]\n", (char*)bin_node->key, *((size_t*)bin_node->data));
      if (bin_node->left){
         fprintf (dot_file, "\t%lu -> %lu\n", (long unsigned)bin_node, (long unsigned)bin_node->left);
         bin_node_to_dot(bin_node->left, dot_file);
@@ -528,17 +526,19 @@ int bin_tree_iterEquel(void* iterator1, void* iterator2){
 
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
 
-/*int main(int argc, char* argv[])
+/*
+int main(int argc, char* argv[])
 {
-    storage_t* bin_tree = bin_tree_ctor(&bin_cmp_str);
+    storage_t* bin_tree = init_bin_tree(&key_cmp_str);
     char* strings[] = {"One", "Two", "Three", "Four", "Five", "asdsd", "asfsgafdsg", "adfsgwr", "olkjghg", "[poihugjk"};
     int   numbers[] = {4, 8, 6, 2, 1, 3, 9, 7};
 
     for (int i = 0; i < ARRAY_SIZE(numbers); i++){
         printf ("Add %d\n", numbers[i]);
         bin_tree->add(bin_tree, &numbers[i], NULL);
+              bin_node_show_dot(((bin_tree_t*)(bin_tree->_manager))->root);
     }
-          bin_node_show_dot(((bin_tree_t*)(bin_tree->_manager))->root);
+
     for (int i = 0; i < ARRAY_SIZE(numbers) - 1; i++){
         printf ("Drop %d\n", numbers[i]);
         bin_tree->drop(bin_tree, &numbers[i]);
@@ -547,6 +547,5 @@ int bin_tree_iterEquel(void* iterator1, void* iterator2){
 
     bin_tree->destroy(bin_tree);
     return 0;
-}
-*/
+}*/
 #endif // BINTREE_H

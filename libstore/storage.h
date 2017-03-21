@@ -10,7 +10,6 @@ extern "C"{
 @brief storage with search function
 An interface for different approaches of data storage (hash table, black-red tree)
 */
-#pragma pack(push, 8)
 typedef struct storage_t{
 //Main metod's
 	int (*add)(void* self, const void* key, const void* element);
@@ -28,11 +27,16 @@ typedef struct storage_t{
 	void* (*getElem)(void* iterator);
 	int (*iterEquel)(void* iterator1, void* iterator2);
 } storage_t;
-#pragma(pop)
 
-
+/*
+Function for init storage_t working on binary tree.
+key_cmp - pointer to comparison function: 0 = equal, <0 = key1 < key 2, >0 = key1 > key2;
+*/
 storage_t* init_bin_tree(int (*key_cmp)(const void*, const void*));
 
+/*
+Sample compare functions for string and for int
+*/
 int key_cmp_str(const void* key1, const void* key2);
 int key_cmp_int (const void* key1, const void* key2);
 

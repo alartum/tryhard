@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <limits.h>
 
-#pragma pack(push, 8)
 typedef struct storage_t{
 	int (*add)(void* self, const void* key, const void* element);
 	void (*drop)(void* self, const void* key);
@@ -23,7 +22,6 @@ typedef struct storage_t{
 	void* manager;
 	size_t _size;
 } storage_t;
-#pragma(pop)
 
 struct _list{
 	struct _list* next;
@@ -100,7 +98,7 @@ int add_hash  (void* self, const void* key, const void* element){
 		return 1;
 	}
 
-	
+
 	list* tmp = prev->next;
 
 	while(tmp != NULL){
@@ -155,14 +153,14 @@ void drop_hash(void* self, const void* key){
 			}
 			if(lst->key != NULL){
 				free(lst->key);
-				lst->key = NULL;			
+				lst->key = NULL;
 			}
 			if(lst){
 				free(lst);
 				lst = NULL;
 			}
 			((storage_t*)self)->_size--;
-			return;		
+			return;
 		}
 		prev = lst;
 		lst = lst->next;
@@ -185,7 +183,7 @@ void* find_hash(const void* self, const void* key){
 	list* lst = (list*)var->table[tg];
 	while(lst != NULL){
 		if(!(((hash*)(((storage_t*)self)->manager))->cmpKey)(key, lst->key)){
-			return lst->element;		
+			return lst->element;
 		}
 		lst = lst->next;
 	}
@@ -210,7 +208,7 @@ int clear_hash(void* self){
 				free(tmp->key);
 			}
 			tmp->key = NULL;
-			
+
 			if(tmp->prev != NULL){
 				free(tmp->prev);
 			}
@@ -226,7 +224,7 @@ int clear_hash(void* self){
 				free(tmp);
 				tmp = NULL;
 			}
-		}	
+		}
 	}
 	((storage_t*)self)->_size = 0;
 	return 0;
@@ -312,7 +310,7 @@ void* begin_hash(void* self){
 void* end_hash(void* self){
 	size_t i = 0;
 	size_t size = (((hash*)(((storage_t*)self)->manager))->tbsize);
-	list* tmp = NULL;	
+	list* tmp = NULL;
 	for(i = size - 1; i >= 0; i--){
 		tmp = ((list*)(((hash*)(((storage_t*)self)->manager))->table[i]));
 		if(tmp != NULL){
@@ -380,7 +378,7 @@ storage_t* init_hash(size_t blsize, size_t hash_table_size, size_t key_size, voi
 	}else{
 		((hash*)(tmp->manager))->cmpKey = strcmp;
 	}
-	size_t i;	
+	size_t i;
 	for(i = 0; i < hash_table_size; i++){
 		(((hash*)(tmp->manager))->table[i]) = NULL;
 	}
