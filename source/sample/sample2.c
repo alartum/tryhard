@@ -8,6 +8,13 @@
 #include <unistd.h>
 #include "storage.h"
 
+typedef struct word_item_t word_item_t;
+
+struct word_item_t{
+    char* word;
+    size_t x;
+    word_item_t* next;
+};
 
 int print_help(char* name){
 	char* help = "\n\nThis program for count word in file.\n\nFor example ~ $ %s [-h] file \n\n";
@@ -29,7 +36,7 @@ int getword(int fd, char* str){
 
 	if(!(size = read(fd, &ch, 1)))
 		return size;
-		
+
 	while(!IS_WORD(ch)){
 		if(!(size = read(fd, &ch, 1)))
 			return size;
@@ -42,7 +49,7 @@ int getword(int fd, char* str){
 		if(IS_WORD(ch)){
 			str[i++] = ch;
 		}else{
-			goto out;	
+			goto out;
 		}
 	}
 out:
@@ -52,9 +59,6 @@ out:
 
 int main(int argc, char** argv){
 	int opt = 0;
-	size_t x = 0;
-	char str[1024];
-	size_t count = 0;
 
 	while ((opt = getopt(argc, argv, "h")) != -1) {
 		switch(opt){
@@ -74,7 +78,13 @@ int main(int argc, char** argv){
 		return 0;
 	}
 
+    #if defined(HASH_MODE)
 	storage_t* in = init_hash(sizeof(size_t), 1024, 64, NULL, NULL);
+	#elif defined(TREE_MODE)
+    storage_t* in = init_bin_tree(&key_cmp_str);
+	#else
+        #error "None of mods are defined!"
+	#endif
 
 	int fin = open(argv[1], O_RDONLY);
 
@@ -83,15 +93,20 @@ int main(int argc, char** argv){
 		goto out;
 	}
 
-
-	while(getword(fin, str)){
-		if(in->find(in, str)){
-			x = *((size_t*)(in->find(in, str))) + 1;
-			in->drop(in, str);
+    word_item_t* in_first = (word_item_t*)malloc(sizeof(*in_first));
+	in_first->word = (char*)malloc(1024);
+	word_item_t* current = in_first;
+	while(getword(fin, current->word)){
+		if(in->find(in, current->word)){
+			current->x = *((size_t*)(in->find(in, current->word))) + 1;
+			in->drop(in, current->word);
 		}else{
-			x = 1;
+			current->x = 1;
 		}
-		in->add(in, str, &x);
+		in->add(in, current->word, &(current->x));
+        current->next = (word_item_t*)malloc(sizeof(word_item_t));
+        current = current->next;
+        current->word = (char*)malloc(1024);
 	}
 
 	void* begin = in->begin(in);
@@ -106,7 +121,14 @@ int main(int argc, char** argv){
 	free(end);
 
 	printf("Count of all word: %zu\n", in->size(in));
-
+    word_item_t* prev;
+    current = in_first;
+    do{
+        prev = current;
+        current = current->next;
+        free(prev->word);
+        free(prev);
+    }while(current->next);
 out:
 	if(fin >= 0)
 		close(fin);
