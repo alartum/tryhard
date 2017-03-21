@@ -32,7 +32,10 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="libstore/rbtree.c">
+		<Unit filename="libstore/bintree.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="libstore/hash.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="libstore/storage.h" />
