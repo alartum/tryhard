@@ -444,7 +444,6 @@ void bin_tree_iter_next(void* iterator){
     tree_iterator* iter = (tree_iterator*)iterator;
     if (iter->bin_node == iter->bin_tree->most_right){
         iter->bin_node = NULL;
-        iter->bin_tree = NULL;
 
         return;
     }
@@ -468,7 +467,6 @@ void bin_tree_iter_prev(void* iterator){
     tree_iterator* iter = (tree_iterator*)iterator;
     if (iter->bin_node == iter->bin_tree->most_left){
         iter->bin_node = NULL;
-        iter->bin_tree = NULL;
 
         return;
     }
@@ -490,7 +488,9 @@ void bin_tree_iter_prev(void* iterator){
 
 void* bin_tree_iter_end(void* self){
     tree_iterator* iter = (tree_iterator*)malloc(sizeof(*iter));
-    iter->bin_tree = NULL;
+    storage_t* storage = (storage_t*)self;
+    bin_tree_t* bin_tree = (bin_tree_t*)(storage->_manager);
+    iter->bin_tree = bin_tree;
     iter->bin_node = NULL;
 
     return (void*)iter;

@@ -246,12 +246,11 @@ void next_hash(void* arg){
 	size_t i = 0;
 	storage_t* self = (storage_t*)(temp->self);
 	size_t tbsize = ((hash*)(self->manager))->tbsize;
-
 	if(temp->lst->next){
 		temp->lst = temp->lst->next;
 		return;
 	}
-	for(i = temp->num + 1; ; i = (i + 1) % tbsize){
+	for(i = temp->num + 1; i < tbsize; i ++){
 		if(((list*)(((hash*)(((storage_t*)self)->manager))->table[i])) != NULL){
 			temp->num = i;
 			temp->lst = ((list*)(((hash*)(((storage_t*)self)->manager))->table[i]));
@@ -259,7 +258,9 @@ void next_hash(void* arg){
 			return;
 		}
 	}
-
+    temp->num = 0;
+    temp->lst = NULL;
+    temp->self = (void*)self;
 	return;
 }
 
@@ -301,6 +302,7 @@ void* begin_hash(void* self){
 			temp->num = i;
 			temp->lst = ((list*)(((hash*)(((storage_t*)self)->manager))->table[i]));
 			temp->self = (void*)self;
+
 			return temp;
 		}
 	}
@@ -308,6 +310,12 @@ void* begin_hash(void* self){
 }
 
 void* end_hash(void* self){
+    iterator* temp = (iterator*)malloc(sizeof(iterator));
+    temp->num = 0;
+    temp->lst = NULL;
+    temp->self = (void*)self;
+    return (void*)temp;
+/*
 	size_t i = 0;
 	size_t size = (((hash*)(((storage_t*)self)->manager))->tbsize);
 	list* tmp = NULL;
@@ -325,6 +333,7 @@ void* end_hash(void* self){
 		}
 	}
 	return NULL;
+*/
 }
 
 void* at_hash_elem(void* arg){
