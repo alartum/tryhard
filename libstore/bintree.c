@@ -130,8 +130,9 @@ storage_t* init_bin_tree(int (*key_cmp)(const void*, const void*)){
     bin_tree->size = 0;
     bin_tree->most_left = NULL;
     bin_tree->most_right = NULL;
+    bin_tree->root = NULL;
 
-	return bin_tree_casted;
+    return bin_tree_casted;
 }
 
 void bin_tree_init(bin_tree_t* bin_tree, const void* key, const void* data)
@@ -223,6 +224,7 @@ int bin_tree_add(void* self, const void* key, const void* data){
         bin_node_set_left(parent, new_node);
     bin_tree->size++;
     int is_min, is_max;
+
     is_min = (*(bin_tree->key_cmp))(bin_tree->most_left->key, key);
     is_max = (*(bin_tree->key_cmp))(bin_tree->most_right->key, key);
     if (is_min > 0)
@@ -258,12 +260,12 @@ int bin_tree_destroy(void* self){
         free(bin_tree->root);
         bin_tree->root = NULL;
     }
+    free(bin_tree);
     return 1;
 }
 
 void bin_node_delete(bin_node_t* bin_node){
     assert(bin_node);
-    bin_node_delete_subtree(bin_node);
     if (bin_node == bin_node->tree->most_left)
         bin_node->tree->most_left = bin_node->parent;
     if (bin_node == bin_node->tree->most_right)
@@ -318,6 +320,8 @@ void bin_tree_drop_(bin_node_t* bin_node, const void* key)
                 bin_node->key = most_left->key;
                 most_left->parent->left = most_left->right;
                 if (most_left->right) most_left->right->parent = most_left->parent;
+                if (most_left == bin_node->tree->most_left)
+                    most_left->tree->most_left = most_left->parent;
                 free(most_left);
             }
         }
@@ -344,15 +348,30 @@ void bin_tree_drop_(bin_node_t* bin_node, const void* key)
                 bin_node->data = child->data;
                 bin_node->key = child->key;
                 bin_node->right = child->right;
+                if (child->right)
+                    child->right->parent = bin_node;
                 bin_node->left = child->left;
+                if (child->left)
+                    child->left->parent = bin_node;
+
+                if (child == child->tree->most_left)
+                    child->tree->most_left = bin_node;
+                if (child == child->tree->most_right)
+                    child->tree->most_right = bin_node;
                 free(child);
             }
             else{
-                if (bin_node == bin_node->tree->most_right)
-                    bin_node->tree->most_right = bin_node->parent;
                 if (bin_node == bin_node->tree->most_left)
                     bin_node->tree->most_left = bin_node->parent;
-                bin_node_delete(bin_node);
+                if (bin_node == bin_node->tree->most_right)
+                    bin_node->tree->most_right = bin_node->parent;
+                if (bin_node->parent){
+                    if (bin_node->parent->right == bin_node)
+                        bin_node->parent->right = NULL;
+                    if (bin_node->parent->left == bin_node)
+                        bin_node->parent->left = NULL;
+                }
+                free(bin_node);
             }
         }
     }
@@ -364,6 +383,8 @@ void bin_tree_drop(void* self, const void* key){
 
     bin_tree_t* bin_tree = (bin_tree_t*)(((storage_t*)self)->_manager);
     assert(bin_tree);
+    if (!(bin_tree->root))
+        return;
     int is_in_root = (*(bin_tree->key_cmp))(bin_tree->root->key, key);
     if (bin_tree->root && is_in_root == 0
         && !(bin_tree->root->left) && !(bin_tree->root->right)){
@@ -409,6 +430,7 @@ void bin_node_dump (const bin_node_t* bin_node)
     printf ("}\n");
 }
 
+/*
 void bin_node_to_dot (const bin_node_t* bin_node, FILE* dot_file)
 {
     assert(dot_file);
@@ -439,6 +461,7 @@ void bin_node_show_dot (const bin_node_t* bin_node)
     system("xdot dump.dot");
    system("rm dump.dot");
 }
+*/
 
 void bin_tree_iter_next(void* iterator){
     tree_iterator* iter = (tree_iterator*)iterator;
@@ -523,29 +546,4 @@ int bin_tree_iterEquel(void* iterator1, void* iterator2){
     tree_iterator* iter2 = (tree_iterator*)iterator2;
     return (iter1->bin_node == iter2->bin_node && iter1->bin_tree == iter2->bin_tree);
 }
-
-#define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
-
-/*
-int main(int argc, char* argv[])
-{
-    storage_t* bin_tree = init_bin_tree(&key_cmp_str);
-    char* strings[] = {"One", "Two", "Three", "Four", "Five", "asdsd", "asfsgafdsg", "adfsgwr", "olkjghg", "[poihugjk"};
-    int   numbers[] = {4, 8, 6, 2, 1, 3, 9, 7};
-
-    for (int i = 0; i < ARRAY_SIZE(numbers); i++){
-        printf ("Add %d\n", numbers[i]);
-        bin_tree->add(bin_tree, &numbers[i], NULL);
-              bin_node_show_dot(((bin_tree_t*)(bin_tree->_manager))->root);
-    }
-
-    for (int i = 0; i < ARRAY_SIZE(numbers) - 1; i++){
-        printf ("Drop %d\n", numbers[i]);
-        bin_tree->drop(bin_tree, &numbers[i]);
-        bin_node_show_dot(((bin_tree_t*)(bin_tree->_manager))->root);
-    }
-
-    bin_tree->destroy(bin_tree);
-    return 0;
-}*/
 #endif // BINTREE_H

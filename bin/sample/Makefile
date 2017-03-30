@@ -1,7 +1,7 @@
 LIBNAME = libstore.a
 USER_DIR = ../../source/sample
 LIB_DIR = ../../libstore
-CCFLAGS = -Wextra -ansi -Wall -O3 -std=gnu11 -I $(LIB_DIR)
+CCFLAGS = -Wextra -ansi -Wall -O3 -std=gnu11 -I $(LIB_DIR) -ggdb
 TARGET_TREE = sample1_tree sample2_tree
 TARGET_HASH = sample1_hash sample2_hash
 MODE = none
